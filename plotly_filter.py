@@ -176,8 +176,6 @@ app.layout = html.Div([
             ], style={'display': 'flex', 'flexDirection': 'row',
                       'alignItems': 'center', 'justifyContent': 'center'}),
 
-            html.H5(id='pcp-label', style={'textAlign': 'center'}),
-
             # Scatterpolar graph for displaying selected values
             dcc.Graph(id='scatterpolar-middle',
                       responsive=True,
@@ -446,6 +444,7 @@ def update_scatterplot_left(x_value, y_value, category, left_demographic, first_
     fig.update_layout(title='Scatter Plot',
                       xaxis_title=x_value,
                       yaxis_title=y_value,
+                      dragmode="select",
                       legend_title='Income - Age',
                       legend_title_font=dict(size=12))
 
@@ -542,11 +541,9 @@ def update_radarplot_left(category, x_value, y_value):
      Input('category-dropdown', 'value'),
      Input('second-demographic-dropdown', 'value'),
      Input('right-side-first-barplot', 'selectedData'),
-     Input('right-side-second-barplot', 'selectedData')]
+     Input('right-side-second-barplot', 'selectedData'),]
 )
 def update_scatterplot_right(x_value, y_value, category, right_demographic, first_barplot_data, second_barplot_data):
-    # Filter database based on chosen demographic
-    # yes
     if category == 'Loan_Type':
         filtered_df = df[df[right_demographic] == 1]
     else:
@@ -561,6 +558,7 @@ def update_scatterplot_right(x_value, y_value, category, right_demographic, firs
     fig.update_layout(title='Scatter Plot',
                       xaxis_title=x_value,
                       yaxis_title=y_value,
+                      dragmode="select",
                       legend_title='Income - Age',
                       legend_title_font=dict(size=12))
 
@@ -596,7 +594,7 @@ def update_scatterplot_right(x_value, y_value, category, right_demographic, firs
      Output('right-side-second-barplot', 'figure')],
     [Input('category-dropdown', 'value'),
      Input('second-demographic-dropdown', 'value'),
-     Input('right-side-scatterplot', 'selectedData')]
+     Input('right-side-scatterplot', 'styledData')]
 )
 def update_right_side_first_second_barplot(category, right_demographic, selected_data):
     filtered_df = create_barplot_filtered_df(category, right_demographic, selected_data)
@@ -664,8 +662,7 @@ def update_occupation_names(first_occupation, second_occupation):
 # Callback to update the output div based on the selected occupations
 @app.callback(
     [Output('scatterpolar-middle', 'figure'),
-     Output('pcp', 'figure'),
-     Output('pcp-label', 'children')],
+     Output('pcp', 'figure')],
     [Input('first-demographic-dropdown', 'value'),
      Input('second-demographic-dropdown', 'value'),
      Input('category-dropdown', 'value'),
@@ -770,12 +767,6 @@ def update_output(left_demographic, right_demographic, selected_category, left_s
             line=dict(color=category_codes, colorscale=custom_color_scale),
             dimensions=dimensions,
         ))
-        pcp_label = ""
-        for value, code in zip(masked_df[left_demographic].unique(), category_codes):
-            if pcp_label != "":
-                pcp_label = pcp_label + f", {code}: {selected_values[value]}"
-            else:
-                pcp_label = f"{code}: {selected_values[value]}"
     else:
         category_codes = pd.Categorical(masked_df[selected_category],
                                         categories=masked_df[selected_category].unique()).codes
@@ -784,13 +775,7 @@ def update_output(left_demographic, right_demographic, selected_category, left_s
                 line=dict(color=category_codes, colorscale=custom_color_scale),
                 dimensions=dimensions,
             ))
-        pcp_label = ""
-        for value, code in zip(masked_df[selected_category].unique(), category_codes):
-            if pcp_label != "":
-                pcp_label = pcp_label + f", {code}: {value}"
-            else:
-                pcp_label = f"{code}: {value}"
-    return scatterpolar_middle, pcp_plot, pcp_label
+    return scatterpolar_middle, pcp_plot
 
 
 if __name__ == '__main__':

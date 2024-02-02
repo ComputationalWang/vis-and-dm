@@ -778,7 +778,8 @@ def update_output(left_demographic, right_demographic, selected_category, left_s
 
     for field in fields:
         if selected_category == 'Loan_Type':
-            masked_df = filtered_df[(filtered_df[left_demographic] == 1) | (filtered_df[right_demographic] == 1)]
+            masked_df = filtered_df[((filtered_df[left_demographic] == 1) & left_income_mask & left_age_mask) |
+                                    ((filtered_df[right_demographic] == 1) & right_income_mask & right_age_mask)]
             masked_field = masked_df[field]
         else:
             masked_df = filtered_df[filtered_df[selected_category].isin(selected_values)]

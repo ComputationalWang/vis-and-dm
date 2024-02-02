@@ -464,6 +464,7 @@ def update_scatterplot_left(x_value, y_value, category, left_demographic, first_
 
     return fig
 
+
 def get_barplot_groups(first_barplot_data, second_barplot_data):
     incomes = []
     ages = []
@@ -478,6 +479,7 @@ def get_barplot_groups(first_barplot_data, second_barplot_data):
     else:
         incomes = income_labels.copy()
     return incomes, ages
+
 
 @app.callback(
     [Output('left-side-first-barplot', 'figure'),
@@ -544,7 +546,6 @@ def update_radarplot_left(category, x_value, y_value, first_barplot_data, second
     return fig
 
 
-
 # Callback to update the scatterplot for the left side
 @app.callback(
     Output('right-side-scatterplot', 'figure'),
@@ -553,7 +554,7 @@ def update_radarplot_left(category, x_value, y_value, first_barplot_data, second
      Input('category-dropdown', 'value'),
      Input('second-demographic-dropdown', 'value'),
      Input('right-side-first-barplot', 'selectedData'),
-     Input('right-side-second-barplot', 'selectedData'),]
+     Input('right-side-second-barplot', 'selectedData'), ]
 )
 def update_scatterplot_right(x_value, y_value, category, right_demographic, first_barplot_data, second_barplot_data):
     if category == 'Loan_Type':
@@ -681,7 +682,8 @@ def update_occupation_names(first_occupation, second_occupation):
      Input('right-side-second-barplot', 'selectedData')]
 )
 def update_output(left_demographic, right_demographic, selected_category, left_scatter_data, right_scatter_data,
-                  left_first_barplot_data, left_second_barplot_data, right_first_barplot_data, right_second_barplot_data):
+                  left_first_barplot_data, left_second_barplot_data, right_first_barplot_data,
+                  right_second_barplot_data):
     if any(item is None for item in
            [left_demographic, right_demographic, selected_category]):
         return go.Figure(), go.Figure()
@@ -729,7 +731,6 @@ def update_output(left_demographic, right_demographic, selected_category, left_s
                                         join="inner")
     else:
         filtered_df = df.copy()
-
 
     left_income_mask = filtered_df['Grouped_Annual_Income'].isin(left_incomes)
     left_age_mask = filtered_df['Grouped_Age'].isin(left_ages)
@@ -806,4 +807,4 @@ def update_output(left_demographic, right_demographic, selected_category, left_s
 
 
 if __name__ == '__main__':
-    app.run_server(debug=True)
+    app.run_server(debug=False)

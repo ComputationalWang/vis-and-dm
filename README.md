@@ -18,5 +18,8 @@ The preference for visualization methods over traditional statistical techniques
 ## Guide
 Through this guide you can use the visualization tool. To run the tool you have to first have to run the [Clean.py](Clean.py) to clean the *all_data.csv* modified file from Kaggle in Canvas. Or have downloaded [filled_data.csv](filled_data.csv).
 
+For midterm file open the [Visualizations.ipynb](Visualizations.ipynb)
+
+To open the application open [plotly_filter.py](plotly_filter.py)
 To filter and/or brush data you have to select the data through the dropboxes or select subgroups in the demographic scatter or bar plots in the two sides, double click within the selected graph to unselect.
 

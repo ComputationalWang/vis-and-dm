@@ -370,6 +370,7 @@ def create_first_barplot(filtered_df):
     # Update layout
     barplot.update_layout(title='Income Groups Frequency',
                           xaxis_title='Income Group',
+                          dragmode="select",
                           yaxis_title='Frequency',
                           showlegend=False)
     return barplot
@@ -393,6 +394,7 @@ def create_second_barplot(filtered_df):
     # Update layout
     barplot.update_layout(title='Age Groups Frequency',
                           xaxis_title='Age Group',
+                          dragmode="select",
                           yaxis_title='Frequency',
                           showlegend=False)
     return barplot
@@ -449,19 +451,8 @@ def update_scatterplot_left(x_value, y_value, category, left_demographic, first_
                       legend_title_font=dict(size=12))
 
     if (first_barplot_data and first_barplot_data['points']) or (second_barplot_data and second_barplot_data['points']):
-        incomes = []
-        ages = []
         groups = []
-        if second_barplot_data is not None:
-            for bar in second_barplot_data['points']:
-                ages.append(bar['x'])
-        else:
-            ages = age_labels.copy()
-        if first_barplot_data is not None:
-            for bar in first_barplot_data['points']:
-                incomes.append(bar['x'])
-        else:
-            incomes = income_labels.copy()
+        incomes, ages = get_barplot_groups(first_barplot_data, second_barplot_data)
 
         for income in incomes:
             for age in ages:
@@ -473,6 +464,20 @@ def update_scatterplot_left(x_value, y_value, category, left_demographic, first_
 
     return fig
 
+def get_barplot_groups(first_barplot_data, second_barplot_data):
+    incomes = []
+    ages = []
+    if second_barplot_data is not None:
+        for bar in second_barplot_data['points']:
+            ages.append(bar['x'])
+    else:
+        ages = age_labels.copy()
+    if first_barplot_data is not None:
+        for bar in first_barplot_data['points']:
+            incomes.append(bar['x'])
+    else:
+        incomes = income_labels.copy()
+    return incomes, ages
 
 @app.callback(
     [Output('left-side-first-barplot', 'figure'),
@@ -495,9 +500,11 @@ def update_left_side_first_second_barplot(category, left_demographic, selected_d
     Output('scatterpolar-left', 'figure'),
     [Input('category-dropdown', 'value'),
      Input('left-side-select-x-dropdown', 'value'),
-     Input('left-side-select-y-dropdown', 'value')]
+     Input('left-side-select-y-dropdown', 'value'),
+     Input('left-side-first-barplot', 'selectedData'),
+     Input('left-side-second-barplot', 'selectedData')]
 )
-def update_radarplot_left(category, x_value, y_value):
+def update_radarplot_left(category, x_value, y_value, first_barplot_data, second_barplot_data):
     # Get unique labels for the main category selected in the middle
     if category == 'Loan_Type':
         main_category_labels = loan_types
@@ -505,15 +512,19 @@ def update_radarplot_left(category, x_value, y_value):
         main_category_labels = df[category].unique()
 
     fig = go.Figure()
+    incomes, ages = get_barplot_groups(first_barplot_data, second_barplot_data)
+
+    incomes_mask = df['Grouped_Annual_Income'].isin(incomes)
+    ages_mask = df['Grouped_Age'].isin(ages)
 
     # Create traces for the selected field
     for xy, line_color in zip([x_value, y_value], ['cornflowerblue', 'darkblue']):
         values = []
         for label in main_category_labels:
             if category == 'Loan_Type':
-                label_data = df[df[label] == 1]
+                label_data = df[(df[label] == 1) & incomes_mask & ages_mask]
             else:
-                label_data = df[df[category] == label]
+                label_data = df[(df[category] == label) & incomes_mask & ages_mask]
 
             mean_value = label_data[xy].mean()
             if not math.isnan(mean_value):
@@ -531,6 +542,7 @@ def update_radarplot_left(category, x_value, y_value):
         ))
 
     return fig
+
 
 
 # Callback to update the scatterplot for the left side
@@ -563,19 +575,8 @@ def update_scatterplot_right(x_value, y_value, category, right_demographic, firs
                       legend_title_font=dict(size=12))
 
     if (first_barplot_data and first_barplot_data['points']) or (second_barplot_data and second_barplot_data['points']):
-        incomes = []
-        ages = []
         groups = []
-        if second_barplot_data is not None:
-            for bar in second_barplot_data['points']:
-                ages.append(bar['x'])
-        else:
-            ages = age_labels.copy()
-        if first_barplot_data is not None:
-            for bar in first_barplot_data['points']:
-                incomes.append(bar['x'])
-        else:
-            incomes = income_labels.copy()
+        incomes, ages = get_barplot_groups(first_barplot_data, second_barplot_data)
 
         for income in incomes:
             for age in ages:
@@ -594,7 +595,7 @@ def update_scatterplot_right(x_value, y_value, category, right_demographic, firs
      Output('right-side-second-barplot', 'figure')],
     [Input('category-dropdown', 'value'),
      Input('second-demographic-dropdown', 'value'),
-     Input('right-side-scatterplot', 'styledData')]
+     Input('right-side-scatterplot', 'selectedData')]
 )
 def update_right_side_first_second_barplot(category, right_demographic, selected_data):
     filtered_df = create_barplot_filtered_df(category, right_demographic, selected_data)
@@ -610,9 +611,11 @@ def update_right_side_first_second_barplot(category, right_demographic, selected
     Output('scatterpolar-right', 'figure'),
     [Input('category-dropdown', 'value'),
      Input('right-side-select-x-dropdown', 'value'),
-     Input('right-side-select-y-dropdown', 'value')]
+     Input('right-side-select-y-dropdown', 'value'),
+     Input('right-side-first-barplot', 'selectedData'),
+     Input('right-side-second-barplot', 'selectedData')]
 )
-def update_radarplot_right(category, x_value, y_value):
+def update_radarplot_right(category, x_value, y_value, first_barplot_data, second_barplot_data):
     # Get unique labels for the main category selected in the middle
     if category == 'Loan_Type':
         main_category_labels = loan_types
@@ -620,15 +623,19 @@ def update_radarplot_right(category, x_value, y_value):
         main_category_labels = df[category].unique()
 
     fig = go.Figure()
+    incomes, ages = get_barplot_groups(first_barplot_data, second_barplot_data)
+
+    incomes_mask = df['Grouped_Annual_Income'].isin(incomes)
+    ages_mask = df['Grouped_Age'].isin(ages)
 
     # Create traces for the selected field
     for xy, line_color in zip([x_value, y_value], ['orange', 'chocolate']):
         values = []
         for label in main_category_labels:
             if category == 'Loan_Type':
-                label_data = df[df[label] == 1]
+                label_data = df[(df[label] == 1) & incomes_mask & ages_mask]
             else:
-                label_data = df[df[category] == label]
+                label_data = df[(df[category] == label) & incomes_mask & ages_mask]
 
             mean_value = label_data[xy].mean()
             if not math.isnan(mean_value):
@@ -667,9 +674,14 @@ def update_occupation_names(first_occupation, second_occupation):
      Input('second-demographic-dropdown', 'value'),
      Input('category-dropdown', 'value'),
      Input('left-side-scatterplot', 'selectedData'),
-     Input('right-side-scatterplot', 'selectedData')]
+     Input('right-side-scatterplot', 'selectedData'),
+     Input('left-side-first-barplot', 'selectedData'),
+     Input('left-side-second-barplot', 'selectedData'),
+     Input('right-side-first-barplot', 'selectedData'),
+     Input('right-side-second-barplot', 'selectedData')]
 )
-def update_output(left_demographic, right_demographic, selected_category, left_scatter_data, right_scatter_data):
+def update_output(left_demographic, right_demographic, selected_category, left_scatter_data, right_scatter_data,
+                  left_first_barplot_data, left_second_barplot_data, right_first_barplot_data, right_second_barplot_data):
     if any(item is None for item in
            [left_demographic, right_demographic, selected_category]):
         return go.Figure(), go.Figure()
@@ -678,6 +690,9 @@ def update_output(left_demographic, right_demographic, selected_category, left_s
     selected_values += [right_demographic] if isinstance(right_demographic, str) else right_demographic
 
     scatterpolar_middle = go.Figure()
+
+    left_incomes, left_ages = get_barplot_groups(left_first_barplot_data, left_second_barplot_data)
+    right_incomes, right_ages = get_barplot_groups(right_first_barplot_data, right_second_barplot_data)
 
     if (left_scatter_data and left_scatter_data['points']) or (right_scatter_data and right_scatter_data['points']):
 
@@ -715,14 +730,25 @@ def update_output(left_demographic, right_demographic, selected_category, left_s
     else:
         filtered_df = df.copy()
 
+
+    left_income_mask = filtered_df['Grouped_Annual_Income'].isin(left_incomes)
+    left_age_mask = filtered_df['Grouped_Age'].isin(left_ages)
+    right_income_mask = filtered_df['Grouped_Annual_Income'].isin(right_incomes)
+    right_age_mask = filtered_df['Grouped_Age'].isin(right_ages)
     # Making fig1 scatterpolar
     dimensions = []
     for i, value in enumerate(selected_values):
         mean_table = []
-        if selected_category == 'Loan_Type':
-            masked_df = filtered_df[filtered_df[value] == 1]
+        if i == 0:
+            incomes_mask = left_income_mask
+            ages_mask = left_age_mask
         else:
-            masked_df = filtered_df[filtered_df[selected_category] == value]
+            incomes_mask = right_income_mask
+            ages_mask = right_age_mask
+        if selected_category == 'Loan_Type':
+            masked_df = filtered_df[(filtered_df[value] == 1) & incomes_mask & ages_mask]
+        else:
+            masked_df = filtered_df[(filtered_df[selected_category] == value) & incomes_mask & ages_mask]
 
         for field in fields:
             calculated_mean = masked_df[field].mean()
